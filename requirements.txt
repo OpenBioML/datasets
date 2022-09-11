@@ -20,7 +20,6 @@ mccabe==0.7.0
 mypy-extensions==0.4.3
 nodeenv==1.7.0
 numpy==1.23.3
--e git+https://github.com/OpenBioML/datasets.git@487ab04e0b193495b218b60a6fe551738ee2b9f0#egg=openbioml_datasets
 packaging==21.3
 pandas==1.4.4
 pathspec==0.10.1
