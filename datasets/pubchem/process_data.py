@@ -19,6 +19,7 @@ def process_file(filename):
     downloaded = download_sdf(filename)
 
     objs = []
+    failed = []
     print("| Reading SDF")
     num_processed = 0
     suppl = read_sdf(downloaded)
@@ -28,22 +29,28 @@ def process_file(filename):
 
         json_obj = json.loads(Chem.rdMolInterchange.MolToJSON(mol))
 
-        json_obj["CAN_SELFIE"] = sf.encoder(
-            json_obj["molecules"][0]["properties"]["PUBCHEM_OPENEYE_CAN_SMILES"]
-        )
+        try:
+            json_obj["CAN_SELFIE"] = sf.encoder(
+                json_obj["molecules"][0]["properties"]["PUBCHEM_OPENEYE_CAN_SMILES"]
+            )
 
-        objs.append(json_obj)
-        num_processed += 1
+            objs.append(json_obj)
+            num_processed += 1
+        except sf.EncoderError as e:
+            print(f"Failed to encode {json_obj['molecules'][0]['name']} with error {e}")
+            json_obj["ERROR"] = str(e)
+            failed.append(json_obj)
 
         if num_processed % 1000 == 0:
             print(f"| Processed {num_processed} molecules")
 
-        if num_processed > 1000:
-            break
-
+    print(f"| Processed {num_processed} molecules out of {len(objs) + len(failed)}")
     print("| Writing JSONL")
     jsonl_name = downloaded.replace(".sdf", ".jsonl")
     to_jsonl(objs, jsonl_name)
+
+    # keeping for now for debugging
+    to_jsonl(failed, jsonl_name.replace(".jsonl", "_failed.jsonl"))
 
 
 if __name__ == "__main__":
