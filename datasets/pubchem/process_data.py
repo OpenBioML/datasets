@@ -1,4 +1,5 @@
 import json
+from typing import Counter
 
 import selfies as sf
 from rdkit import Chem
@@ -21,10 +22,11 @@ def process_file(filename):
     objs = []
     failed = []
     print("| Reading SDF")
-    num_processed = 0
+    counter = Counter()
     suppl = read_sdf(downloaded)
-    for mol in suppl:
+    for i, mol in enumerate(suppl):
         if mol is None:
+            counter["skipped"] += 1
             continue
 
         json_obj = json.loads(Chem.rdMolInterchange.MolToJSON(mol))
@@ -35,16 +37,19 @@ def process_file(filename):
             )
 
             objs.append(json_obj)
-            num_processed += 1
+            counter["processed"] += 1
         except sf.EncoderError as e:
             print(f"Failed to encode {json_obj['molecules'][0]['name']} with error {e}")
             json_obj["ERROR"] = str(e)
+            counter["failed"] += 1
             failed.append(json_obj)
 
-        if num_processed % 1000 == 0:
-            print(f"| Processed {num_processed} molecules")
+        if (i + 1) % 1000 == 0:
+            print(f"| Processed {sum(counter.values())} molecules")
 
-    print(f"| Processed {num_processed} molecules out of {len(objs) + len(failed)}")
+    print(
+        f"| Processed {counter['processed']}, skipped {counter['skipped']}, failed {counter['failed']} out of {sum(counter.values())} molecules"
+    )
     print("| Writing JSONL")
     jsonl_name = downloaded.replace(".sdf", ".jsonl")
     to_jsonl(objs, jsonl_name)
