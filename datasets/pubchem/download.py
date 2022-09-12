@@ -8,6 +8,9 @@ def download_sdf(url, save_dir="data/"):
     filename = url.split("/")[-1].replace(".gz", "")
     filename = f"{save_dir}{filename}"
 
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
     if os.path.exists(filename):
         print(f"| {filename} already exists")
         return filename
