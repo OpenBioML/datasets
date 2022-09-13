@@ -24,6 +24,7 @@ def write_jsonl(mols, path):
             f.write("\n")
 
 
+# dm.fs.glob(f"{RESOURCE_URL}/**.gz") to query all files (would prob freeze)
 for path in dm.fs.glob(f"{URL}/{FILE}"):
     basename = dm.fs.get_basename(path)
     subfolder = folder / basename.split(".")[0]
