@@ -3,7 +3,8 @@ import time
 from pathlib import Path
 
 import datamol as dm
-from rdkit import Chem
+import selfies as sf
+from rdkit import Chem, RDLogger
 
 URL = "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF"
 FILE = "Compound_048500001_049000000.sdf.gz"  # Only 10MB
@@ -13,8 +14,14 @@ folder = Path(OUTPUT_DIR)
 dm.utils.fs.mkdir(folder, exist_ok=True)
 
 
+RDLogger.DisableLog("rdApp.*")
+
+
 def process_mol(mol):
-    mol.SetProp("CAN_SELFIES", dm.to_selfies(mol))
+    try:
+        mol.SetProp("CAN_SELFIES", dm.to_selfies(mol))
+    except sf.exceptions.EncoderError as e:
+        mol.SetProp("ERROR", str(e))
     return Chem.rdMolInterchange.MolToJSON(mol)
 
 
