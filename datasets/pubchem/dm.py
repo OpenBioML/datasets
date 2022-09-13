@@ -9,6 +9,7 @@ from rdkit import Chem, RDLogger
 URL = "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF"
 FILE = "Compound_048500001_049000000.sdf.gz"  # Only 10MB
 OUTPUT_DIR = "data"
+BATCH_SIZE = 100_000
 
 folder = Path(OUTPUT_DIR)
 dm.utils.fs.mkdir(folder, exist_ok=True)
@@ -32,24 +33,21 @@ def write_jsonl(mols, path):
             f.write("\n")
 
 
-# dm.fs.glob(f"{RESOURCE_URL}/**.gz") to query all files (would prob freeze)
+# dm.fs.glob(f"{RESOURCE_URL}/**.gz") to query all files
 start = time.time()
 for path in dm.fs.glob(f"{URL}/{FILE}"):
     basename = dm.fs.get_basename(path)
     subfolder = folder / basename.split(".")[0]
     dm.utils.fs.mkdir(subfolder, exist_ok=True)
     print(f"Created {subfolder}")
-    filename = basename.replace(".sdf.gz", "_SELFIES.jsonl")
 
     destination = subfolder / basename
-    dm.fs.copy_file(
-        source=path,
-        destination=destination,
-        force=True,  # TODO: check if file already exists
-    )
-    print(f"Downloaded {destination}")
 
-    mols = []
+    if dm.fs.exists(destination):
+        print(f"File already downloaded: {destination}")
+    else:
+        dm.fs.copy_file(source=path, destination=destination, force=True, progress=True)
+        print(f"Downloaded {destination}")
 
     # datamol's fn loads everything in memory, so we use rdkit's
     suppl = Chem.ForwardSDMolSupplier(gzip.open(destination))
@@ -58,14 +56,15 @@ for path in dm.fs.glob(f"{URL}/{FILE}"):
     for mol in suppl:
         if mol is None:
             continue
+
         batch.append(mol)
-        if len(batch) == 100000:
+        if len(batch) == BATCH_SIZE:
             mols_json_str.extend(
                 dm.parallelized(process_mol, batch, n_jobs=-1, progress=True)
             )
             batch = []
 
-    # case where len(suppl) % 100000 != 0
+    # case where len(suppl) % BATCH_SZIE != 0
     if batch:
         mols_json_str.extend(
             dm.parallelized(process_mol, batch, n_jobs=-1, progress=True)
