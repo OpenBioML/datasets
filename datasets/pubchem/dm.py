@@ -12,6 +12,7 @@ OUTPUT_DIR = "data"
 BATCH_SIZE = 100_000
 
 RDLogger.DisableLog("rdApp.*")
+Chem.SetDefaultPickleProperties(Chem.PropertyPickleOptions.AllProps)
 
 
 def process_mol(mol):
@@ -66,7 +67,7 @@ for path in paths:
             )
             batch = []
 
-    # case where len(suppl) % BATCH_SZIE != 0
+    # case where len(suppl) % BATCH_SIZE != 0
     if batch:
         mols_json_str.extend(
             dm.parallelized(process_mol, batch, n_jobs=-1, progress=True)
