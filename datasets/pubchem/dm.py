@@ -5,6 +5,7 @@ from pathlib import Path
 import datamol as dm
 import selfies as sf
 from rdkit import Chem, RDLogger
+from tqdm import tqdm
 
 URL = "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF"
 FILE = "Compound_048500001_049000000.sdf.gz"  # Only 10MB
@@ -37,7 +38,7 @@ paths = dm.fs.glob(f"{URL}/**.gz")
 # paths = dm.fs.glob(f"{URL}/{FILE}") # single file
 
 start = time.time()
-for path in paths:
+for path in tqdm(paths):
     basename = dm.fs.get_basename(path)
     subfolder = folder / basename.split(".")[0]
     dm.utils.fs.mkdir(subfolder, exist_ok=True)
