@@ -11,10 +11,6 @@ FILE = "Compound_048500001_049000000.sdf.gz"  # Only 10MB
 OUTPUT_DIR = "data"
 BATCH_SIZE = 100_000
 
-folder = Path(OUTPUT_DIR)
-dm.utils.fs.mkdir(folder, exist_ok=True)
-
-
 RDLogger.DisableLog("rdApp.*")
 
 
@@ -33,9 +29,14 @@ def write_jsonl(mols, path):
             f.write("\n")
 
 
-# dm.fs.glob(f"{RESOURCE_URL}/**.gz") to query all files
+folder = Path(OUTPUT_DIR)
+dm.utils.fs.mkdir(folder, exist_ok=True)
+
+paths = dm.fs.glob(f"{URL}/**.gz")
+# paths = dm.fs.glob(f"{URL}/{FILE}") # single file
+
 start = time.time()
-for path in dm.fs.glob(f"{URL}/{FILE}"):
+for path in paths:
     basename = dm.fs.get_basename(path)
     subfolder = folder / basename.split(".")[0]
     dm.utils.fs.mkdir(subfolder, exist_ok=True)
@@ -46,6 +47,7 @@ for path in dm.fs.glob(f"{URL}/{FILE}"):
     if dm.fs.exists(destination):
         print(f"File already downloaded: {destination}")
     else:
+        print(f"Downloading {path}")
         dm.fs.copy_file(source=path, destination=destination, force=True, progress=True)
         print(f"Downloaded {destination}")
 
