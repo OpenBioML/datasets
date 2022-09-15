@@ -1,64 +1,109 @@
-import json
-from typing import Counter
+import gzip
+import os
 
-import selfies as sf
-from rdkit import Chem
+import datamol as dm
+import modal
 
-from datasets.pubchem.download import download_sdf
-from datasets.pubchem.sdf import read_sdf
+from datasets.pubchem.dm_utils import process_mol, write_jsonl
 
-
-def to_jsonl(objects, filename):
-    with open(filename, "w") as f:
-        for obj in objects:
-            f.write(json.dumps(obj))
-            f.write("\n")
+URL = "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF"
+BATCH_SIZE = 100_000
 
 
-def process_file(filename):
-    print("| Downloading")
-    downloaded = download_sdf(filename)
+stub = modal.Stub(
+    image=modal.DebianSlim()
+    .run_commands(
+        ["apt-get install -y libxrender1 libsm-dev libxext-dev"],
+    )
+    .pip_install(["tqdm", "datamol", "selfies", "rdkit", "requests", "aiohttp"])
+)
 
-    objs = []
-    failed = []
-    print("| Reading SDF")
-    counter = Counter()
-    suppl = read_sdf(downloaded)
-    for i, mol in enumerate(suppl):
+volume = modal.SharedVolume().persist("pubchem-selfies")
+CACHE_DIR = "/cache"
+
+
+@stub.function(
+    mounts=modal.create_package_mounts(["datasets"]),
+    memory=8192,
+    shared_volumes={CACHE_DIR: volume},
+    concurrency_limit=50,
+)
+def run_process_mol(path):
+    from pathlib import Path
+
+    import datamol as dm
+    from rdkit import Chem, RDLogger
+
+    RDLogger.DisableLog("rdApp.*")
+    Chem.SetDefaultPickleProperties(Chem.PropertyPickleOptions.AllProps)
+
+    folder = Path(os.path.join(CACHE_DIR, "data"))
+    basename = dm.fs.get_basename(path)
+    filename = basename.replace(".sdf.gz", "_SELFIES.jsonl")
+    subfolder = folder / basename.split(".")[0]
+    if dm.fs.exists(subfolder / filename):
+        return True
+
+    dm.utils.fs.mkdir(subfolder, exist_ok=True)
+
+    destination = subfolder / basename
+
+    if dm.fs.exists(destination):
+        dm.fs.copy_file(
+            source=path, destination=destination, force=True, progress=False
+        )
+        print(f"File already downloaded: {destination}")
+    else:
+        print(f"Downloading {path}")
+        try:
+            dm.fs.copy_file(
+                source=path, destination=destination, force=True, progress=False
+            )
+        except Exception:
+            print(f"Failed to download {path}")
+            return False
+
+    suppl = Chem.ForwardSDMolSupplier(gzip.open(destination))
+    batch = []
+    mols_json_str = []
+    for mol in suppl:
         if mol is None:
-            counter["skipped"] += 1
             continue
 
-        json_obj = json.loads(Chem.rdMolInterchange.MolToJSON(mol))
-
+        batch.append(mol)
         try:
-            json_obj["CAN_SELFIE"] = sf.encoder(
-                json_obj["molecules"][0]["properties"]["PUBCHEM_OPENEYE_CAN_SMILES"]
+            if len(batch) == BATCH_SIZE:
+                mols_json_str.extend(
+                    dm.parallelized(process_mol, batch, n_jobs=-1, progress=False)
+                )
+                batch = []
+        except Exception:
+            print(f"Failed to process {path}")
+            return False
+
+    # case where len(suppl) % BATCH_SIZE != 0
+    try:
+        if batch:
+            mols_json_str.extend(
+                dm.parallelized(process_mol, batch, n_jobs=-1, progress=False)
             )
+    except Exception:
+        print(f"Failed to process {path}")
+        return False
 
-            objs.append(json_obj)
-            counter["processed"] += 1
-        except sf.EncoderError as e:
-            print(f"Failed to encode {json_obj['molecules'][0]['name']} with error {e}")
-            json_obj["ERROR"] = str(e)
-            counter["failed"] += 1
-            failed.append(json_obj)
-
-        if (i + 1) % 1000 == 0:
-            print(f"| Processed {sum(counter.values())} molecules")
-
-    print(
-        f"| Processed {counter['processed']}, skipped {counter['skipped']}, failed {counter['failed']} out of {sum(counter.values())} molecules"
-    )
-    print("| Writing JSONL")
-    jsonl_name = downloaded.replace(".sdf", ".jsonl")
-    to_jsonl(objs, jsonl_name)
-
-    # keeping for now for debugging
-    to_jsonl(failed, jsonl_name.replace(".jsonl", "_failed.jsonl"))
+    filename = basename.replace(".sdf.gz", "_SELFIES.jsonl")
+    write_jsonl(mols_json_str, subfolder / filename)
+    return True
 
 
 if __name__ == "__main__":
-    process_file(
-        "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF/Compound_000000001_000500000.sdf.gz"
-    )
+    paths = dm.fs.glob(f"{URL}/**.gz")
+    missing = []
+    with stub.run():
+        times = run_process_mol.map(paths)
+
+        for t, path in zip(times, paths):
+            if t is False:
+                missing.append(path)
+
+    print(f"Missing: {missing}")
