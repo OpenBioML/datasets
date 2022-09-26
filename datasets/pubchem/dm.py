@@ -21,7 +21,15 @@ def process_mol(mol):
         mol.SetProp("CAN_SELFIES", dm.to_selfies(mol))
     except sf.exceptions.EncoderError as e:
         mol.SetProp("ERROR", str(e))
-    return Chem.rdMolInterchange.MolToJSON(mol)
+    except Exception:
+        mol.SetProp("ERROR", "Unknown error")
+
+    try:
+        json_str = Chem.rdMolInterchange.MolToJSON(mol)
+    except Exception:
+        json_str = None
+
+    return json_str
 
 
 def write_jsonl(mols, path):
@@ -36,9 +44,13 @@ dm.utils.fs.mkdir(folder, exist_ok=True)
 
 paths = dm.fs.glob(f"{URL}/**.gz")
 # paths = dm.fs.glob(f"{URL}/{FILE}") # single file
+paths = [
+    "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF/Compound_160000001_160500000.sdf.gz"
+]
 
-start = time.time()
+
 for path in tqdm(paths):
+    start = time.time()
     basename = dm.fs.get_basename(path)
     subfolder = folder / basename.split(".")[0]
     dm.utils.fs.mkdir(subfolder, exist_ok=True)
