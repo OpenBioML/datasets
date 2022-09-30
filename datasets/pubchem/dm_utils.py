@@ -1,3 +1,6 @@
+import gzip
+import json
+
 import datamol as dm
 import selfies as sf
 from rdkit import Chem, RDLogger
@@ -24,4 +27,22 @@ def write_jsonl(mols, path):
     with open(path, "w") as f:
         for mol in mols:
             f.write(mol)
+            f.write("\n")
+
+
+def filter_jsonl(jsonlines):
+    filtered = []
+    for json_str in jsonlines:
+        obj = json.loads(json_str)
+        properties = obj["molecules"][0]["properties"]
+        if "CAN_SELFIES" in properties:
+            filtered.append(json_str)
+    print(f"Filtered {len(jsonlines) - len(filtered)} molecules")
+    return filtered
+
+
+def compress_jsonl(jsonlines, path):
+    with gzip.open(path, "wt") as f:
+        for json_str in jsonlines:
+            f.write(json_str)
             f.write("\n")
