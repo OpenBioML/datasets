@@ -3,7 +3,7 @@ import multiprocessing as mp
 import os
 import subprocess
 
-JSONL_COMMAND = "modal volume get pubchem-selfies data/{COMPOUND}/{COMPOUND}_SELFIES.jsonl data/{COMPOUND}"
+JSONL_COMMAND = "modal volume get pubchem-selfies data/{COMPOUND}/{COMPOUND}_SELFIES.jsonl.gz data/{COMPOUND}"
 GZIP_COMMAND = (
     "modal volume get pubchem-selfies data/{COMPOUND}/{COMPOUND}.sdf.gz data/{COMPOUND}"
 )
@@ -29,11 +29,10 @@ def download_and_save(compound):
         return True
 
     jsonl_command = JSONL_COMMAND.format(COMPOUND=compound)
-    gzip_command = GZIP_COMMAND.format(COMPOUND=compound)
 
     print(f"| Downloading {compound}")
 
-    if not os.path.exists(f"data/{compound}/{compound}_SELFIES.jsonl"):
+    if not os.path.exists(f"data/{compound}/{compound}_SELFIES.jsonl.gz"):
         count = 0
         while True:
             try:
@@ -47,26 +46,6 @@ def download_and_save(compound):
             except subprocess.CalledProcessError as e:
                 print(e)
                 print(f"Failed to download {compound} jsonl")
-                return False
-
-            if output.returncode == 0 or count > 2:
-                break
-            count += 1
-
-    if not os.path.exists(f"data/{compound}/{compound}.sdf.gz"):
-        count = 0
-        while True:
-            try:
-                output = subprocess.run(
-                    gzip_command,
-                    shell=True,
-                    check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-            except subprocess.CalledProcessError as e:
-                print(e)
-                print(f"Failed to download {compound} sdf.gz")
                 return False
 
             if output.returncode == 0 or count > 2:

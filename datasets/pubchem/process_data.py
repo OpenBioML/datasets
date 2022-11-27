@@ -27,8 +27,8 @@ CACHE_DIR = "/cache"
     mounts=modal.create_package_mounts(["datasets"]),
     memory=4051,
     shared_volumes={CACHE_DIR: volume},
-    concurrency_limit=100,
-    cpu=4,
+    concurrency_limit=5,
+    cpu=2,
 )
 def run_process_mol(path):
     from pathlib import Path
@@ -101,6 +101,10 @@ def run_process_mol(path):
 
 if __name__ == "__main__":
     paths = sorted(dm.fs.glob(f"{URL}/**.gz"))
+    paths = [
+        "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF/Compound_158000001_158500000.sdf.gz",
+        "https://ftp.ncbi.nlm.nih.gov/pubchem/Compound/CURRENT-Full/SDF/Compound_157000001_157500000.sdf.gz",
+    ]
     missing = []
     with stub.run():
         times = run_process_mol.map(paths)
