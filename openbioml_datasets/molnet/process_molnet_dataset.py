@@ -1,5 +1,6 @@
 import argparse
 from deepchem.molnet.load_function.bace_datasets import load_bace_regression, load_bace_classification
+from deepchem.molnet.load_function.pcba_datasets import load_pcba
 import os
 
 from openbioml_datasets.molnet.deepchem_utils import make_dataframe
@@ -15,6 +16,11 @@ DATASETS = {
         "load_fn": load_bace_classification,
         "task_type": "classification",
         "target": "Class",
+    },
+    "pcba": {
+        "load_fn": load_pcba,
+        "task_type": "classification",
+        "target": "PCBA-686978",
     }
 }
 
@@ -24,7 +30,10 @@ def process_dataset(data_dir, dataset_name):
     target = DATASETS[dataset_name]["target"]
 
     save_dir = os.path.join(data_dir, dataset_name)
+    print(f"Processing {dataset_name}")
     tasks, splits, _ = load_fn(featurizer="Raw")
+    
+    assert target in tasks, f"Target {target} not in tasks {tasks}"
 
     splits = [
             make_dataframe(
@@ -40,6 +49,8 @@ def process_dataset(data_dir, dataset_name):
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
+
+    print(f"Saving {dataset_name}")
 
     train.to_csv(os.path.join(save_dir, f"{dataset_name}_train.csv"), index=False)
     valid.to_csv(os.path.join(save_dir, f"{dataset_name}_valid.csv"), index=False)
