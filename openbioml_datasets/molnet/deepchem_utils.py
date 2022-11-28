@@ -11,7 +11,7 @@ def make_dataframe(
     if len(tasks) == 1:
         mapper = {"y": tasks[0]}
     else:
-        mapper = {f"y{y_i+1}": task for y_i, task in enumerate(tasks_wanted)}
+        mapper = {f"y{y_i+1}": task for y_i, task in enumerate(tasks)}
     df.rename(mapper, axis="columns", inplace=True)
 
     # Canonicalize SMILES
@@ -19,6 +19,8 @@ def make_dataframe(
     selfies_list = [sf.encoder(s) for s in smiles_list]
 
     # Convert labels to integer for classification
+    assert tasks_wanted in df.columns, f"{tasks_wanted} not in dataset"
+
     targets = df[tasks_wanted]
     if dataset_type == "classification":
         targets = targets.astype(int)
@@ -26,9 +28,4 @@ def make_dataframe(
     elif dataset_type == "regression":
         targets = targets.astype(float)
 
-    if len(tasks_wanted) == 1:
-        targets = targets.values.flatten()
-    else:
-        # Convert labels to list for simpletransformers multi-label
-        targets = targets.values.tolist()
     return pd.DataFrame({"smiles": smiles_list, "selfies": selfies_list, "target": targets})
