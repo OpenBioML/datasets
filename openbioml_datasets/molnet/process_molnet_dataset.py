@@ -11,16 +11,19 @@ DATASETS = {
         "load_fn": load_bace_regression,
         "task_type": "regression",
         "target": "pIC50",
+        "split": "scaffold",
     },
     "bace_classification": {
         "load_fn": load_bace_classification,
         "task_type": "classification",
         "target": "Class",
+        "split": "scaffold",
     },
     "pcba": {
         "load_fn": load_pcba,
         "task_type": "classification",
         "target": "PCBA-686978",
+        "splitter": "random",
     }
 }
 
@@ -28,10 +31,11 @@ def process_dataset(data_dir, dataset_name):
     load_fn = DATASETS[dataset_name]["load_fn"]
     task_type = DATASETS[dataset_name]["task_type"]
     target = DATASETS[dataset_name]["target"]
+    splitter = DATASETS[dataset_name]["splitter"]
 
     save_dir = os.path.join(data_dir, dataset_name)
     print(f"Processing {dataset_name}")
-    tasks, splits, _ = load_fn(featurizer="Raw")
+    tasks, splits, _ = load_fn(featurizer="Raw", splitter=splitter)
     
     assert target in tasks, f"Target {target} not in tasks {tasks}"
 
