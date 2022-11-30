@@ -14,7 +14,18 @@ def make_dataframe(dataset, dataset_type, tasks, tasks_wanted):
 
     # Canonicalize SMILES
     smiles_list = [Chem.MolToSmiles(s, isomericSmiles=True) for s in df["X"]]
-    selfies_list = [sf.encoder(s) for s in smiles_list]
+    valid = []
+    selfies_list = []
+    for smile in smiles_list:
+        try:
+            selfie = sf.encoder(smile)
+            selfies_list.append(selfie)
+            valid.append(True)
+        except sf.exceptions.EncoderError:
+            valid.append(False)
+    
+    print(f"Valid SELFIES: {sum(valid)}/{len(valid)}")
+    smiles_list = [smile for i, smile in enumerate(smiles_list) if valid[i]]
 
     # Convert labels to integer for classification
     assert tasks_wanted in df.columns, f"{tasks_wanted} not in dataset"
@@ -25,6 +36,9 @@ def make_dataframe(dataset, dataset_type, tasks, tasks_wanted):
 
     elif dataset_type == "regression":
         targets = targets.astype(float)
+
+    targets = [target for i, target in enumerate(targets) if valid[i]]
+    print(len(smiles_list), len(selfies_list), len(targets))
 
     return pd.DataFrame(
         {"smiles": smiles_list, "selfies": selfies_list, "target": targets}

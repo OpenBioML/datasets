@@ -5,6 +5,7 @@ from deepchem.molnet.load_function.bace_datasets import (
 )
 from deepchem.molnet.load_function.tox21_datasets import load_tox21
 from deepchem.molnet.load_function.pcba_datasets import load_pcba
+from deepchem.molnet.load_function.clintox_datasets import load_clintox
 import os
 
 from openbioml_datasets.molnet.deepchem_utils import make_dataframe
@@ -35,6 +36,12 @@ DATASETS = {
         "target": "SR-p53",
         "splitter": "random",
     },
+    "clintox": {
+        "load_fn": load_clintox,
+        "task_type": "classification",
+        "target": "CT_TOX",
+        "splitter": "scaffold",
+    }
 }
 
 
