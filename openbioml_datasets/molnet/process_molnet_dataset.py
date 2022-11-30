@@ -7,6 +7,7 @@ from deepchem.molnet.load_function.tox21_datasets import load_tox21
 from deepchem.molnet.load_function.pcba_datasets import load_pcba
 from deepchem.molnet.load_function.clintox_datasets import load_clintox
 from deepchem.molnet.load_function.delaney_datasets import load_delaney
+from deepchem.molnet.load_function.clearance_datasets import load_clearance
 import os
 
 from openbioml_datasets.molnet.deepchem_utils import make_dataframe
@@ -48,7 +49,13 @@ DATASETS = {
         "task_type": "reression",
         "target": "measured log solubility in mols per litre",
         "splitter": "scaffold",
-    }
+    },
+    "clearance": {
+        "load_fn": load_clearance,
+        "task_type": "reression",
+        "target": "target",
+        "splitter": "scaffold",
+    },
 }
 
 
