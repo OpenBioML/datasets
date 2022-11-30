@@ -6,6 +6,7 @@ from deepchem.molnet.load_function.bace_datasets import (
 from deepchem.molnet.load_function.tox21_datasets import load_tox21
 from deepchem.molnet.load_function.pcba_datasets import load_pcba
 from deepchem.molnet.load_function.clintox_datasets import load_clintox
+from deepchem.molnet.load_function.delaney_datasets import load_delaney
 import os
 
 from openbioml_datasets.molnet.deepchem_utils import make_dataframe
@@ -40,6 +41,12 @@ DATASETS = {
         "load_fn": load_clintox,
         "task_type": "classification",
         "target": "CT_TOX",
+        "splitter": "scaffold",
+    },
+    "delaney": {
+        "load_fn": load_delaney,
+        "task_type": "reression",
+        "target": "measured log solubility in mols per litre",
         "splitter": "scaffold",
     }
 }
