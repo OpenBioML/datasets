@@ -1,5 +1,9 @@
 import argparse
-from deepchem.molnet.load_function.bace_datasets import load_bace_regression, load_bace_classification
+from deepchem.molnet.load_function.bace_datasets import (
+    load_bace_regression,
+    load_bace_classification,
+)
+from deepchem.molnet.load_function.tox21_datasets import load_tox21
 from deepchem.molnet.load_function.pcba_datasets import load_pcba
 import os
 
@@ -24,8 +28,15 @@ DATASETS = {
         "task_type": "classification",
         "target": "PCBA-686978",
         "splitter": "random",
-    }
+    },
+    "tox21": {
+        "load_fn": load_tox21,
+        "task_type": "classification",
+        "target": "SR-p53",
+        "splitter": "random",
+    },
 }
+
 
 def process_dataset(data_dir, dataset_name):
     load_fn = DATASETS[dataset_name]["load_fn"]
@@ -36,18 +47,18 @@ def process_dataset(data_dir, dataset_name):
     save_dir = os.path.join(data_dir, dataset_name)
     print(f"Processing {dataset_name}")
     tasks, splits, _ = load_fn(featurizer="Raw", splitter=splitter)
-    
+
     assert target in tasks, f"Target {target} not in tasks {tasks}"
 
     splits = [
-            make_dataframe(
-                s,
-                task_type,
-                tasks,
-                target,
-            )
-            for s in splits
-        ]
+        make_dataframe(
+            s,
+            task_type,
+            tasks,
+            target,
+        )
+        for s in splits
+    ]
 
     (train, valid, test) = splits
 
@@ -60,7 +71,7 @@ def process_dataset(data_dir, dataset_name):
     valid.to_csv(os.path.join(save_dir, f"{dataset_name}_valid.csv"), index=False)
     test.to_csv(os.path.join(save_dir, f"{dataset_name}_test.csv"), index=False)
 
-    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_dir", type=str, default="data")

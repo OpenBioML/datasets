@@ -3,9 +3,7 @@ import selfies as sf
 import pandas as pd
 
 
-def make_dataframe(
-    dataset, dataset_type, tasks, tasks_wanted
-):
+def make_dataframe(dataset, dataset_type, tasks, tasks_wanted):
     # adapted from: https://github.dev/seyonechithrananda/bert-loves-chemistry/blob/b0b29205b4db002a043152e0dd3c0d23fbd351fe/chemberta/utils/molnet_dataloader.py#L165
     df = dataset.to_dataframe()
     if len(tasks) == 1:
@@ -28,4 +26,6 @@ def make_dataframe(
     elif dataset_type == "regression":
         targets = targets.astype(float)
 
-    return pd.DataFrame({"smiles": smiles_list, "selfies": selfies_list, "target": targets})
+    return pd.DataFrame(
+        {"smiles": smiles_list, "selfies": selfies_list, "target": targets}
+    )
