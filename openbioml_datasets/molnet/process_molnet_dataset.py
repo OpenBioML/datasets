@@ -8,6 +8,7 @@ from deepchem.molnet.load_function.pcba_datasets import load_pcba
 from deepchem.molnet.load_function.clintox_datasets import load_clintox
 from deepchem.molnet.load_function.delaney_datasets import load_delaney
 from deepchem.molnet.load_function.clearance_datasets import load_clearance
+from deepchem.molnet.load_function.lipo_datasets import load_lipo
 import os
 
 from openbioml_datasets.molnet.deepchem_utils import make_dataframe
@@ -54,6 +55,12 @@ DATASETS = {
         "load_fn": load_clearance,
         "task_type": "reression",
         "target": "target",
+        "splitter": "scaffold",
+    },
+    "lipo": {
+        "load_fn": load_lipo,
+        "task_type": "reression",
+        "target": "exp",
         "splitter": "scaffold",
     },
 }
