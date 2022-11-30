@@ -9,6 +9,7 @@ from deepchem.molnet.load_function.clintox_datasets import load_clintox
 from deepchem.molnet.load_function.delaney_datasets import load_delaney
 from deepchem.molnet.load_function.clearance_datasets import load_clearance
 from deepchem.molnet.load_function.lipo_datasets import load_lipo
+from deepchem.molnet.load_function.bbbp_datasets import load_bbbp
 import os
 
 from openbioml_datasets.molnet.deepchem_utils import make_dataframe
@@ -61,6 +62,12 @@ DATASETS = {
         "load_fn": load_lipo,
         "task_type": "reression",
         "target": "exp",
+        "splitter": "scaffold",
+    },
+    "bbbp": {
+        "load_fn": load_bbbp,
+        "task_type": "classification",
+        "target": "p_np",
         "splitter": "scaffold",
     },
 }
