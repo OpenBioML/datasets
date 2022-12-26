@@ -9,6 +9,8 @@ requirements = [
     "selfies",
     "requests",
     "modal",
+    "datamol",
+    "tqdm",
     "deepchem==2.6.0.dev20210910040306",
 ]
 
