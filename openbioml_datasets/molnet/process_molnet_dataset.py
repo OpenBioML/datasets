@@ -38,7 +38,7 @@ DATASETS = {
         "load_fn": load_tox21,
         "task_type": "classification",
         "target": "SR-p53",
-        "splitter": "random",
+        "splitter": "scaffold",
     },
     "clintox": {
         "load_fn": load_clintox,
