@@ -38,7 +38,7 @@ setup(
     packages=find_packages(include=["datasets", "datasets.*"]),
     test_suite="tests",
     tests_require=test_requirements,
-    url="https://github.com/OpenBioML/datasets",
+    url="https://github.com/OpenBioML/bio-chem-lm",
     version="0.1.0",
     zip_safe=False,
 )

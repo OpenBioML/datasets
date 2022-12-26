@@ -1,6 +1,9 @@
+.vscode
+**.jsonl**
+**.sdf**
+
 data
 **.DS_Store**
-.vscode
 
 
 # Byte-compiled / optimized / DLL files
