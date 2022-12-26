@@ -12,7 +12,7 @@ from deepchem.molnet.load_function.lipo_datasets import load_lipo
 from deepchem.molnet.load_function.bbbp_datasets import load_bbbp
 import os
 
-from openbioml_datasets.molnet.deepchem_utils import make_dataframe
+from datasets.molnet.deepchem_utils import make_dataframe
 
 
 DATASETS = {

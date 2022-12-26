@@ -8,6 +8,7 @@ requirements = [
     "rdkit",
     "selfies",
     "requests",
+    "modal",
     "deepchem==2.6.0.dev20210910040306",
 ]
 
@@ -34,7 +35,7 @@ setup(
     license="MIT license",
     include_package_data=True,
     keywords="datasets",
-    name="openbioml_datasets",
+    name="datasets",
     packages=find_packages(include=["datasets", "datasets.*"]),
     test_suite="tests",
     tests_require=test_requirements,
