@@ -1,0 +1,10 @@
+requests
+pandas
+layoutparser
+opencv-python
+tqdm
+pytesseract
+pymupdf
+torch
+torchvision
+"git+https://github.com/facebookresearch/detectron2.git@v0.5#egg=detectron2"
